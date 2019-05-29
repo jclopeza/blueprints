@@ -1,0 +1,23 @@
+---
+apiVersion: xl-deploy/v1
+kind: Applications
+spec:
+- name: Applications/{{.AppFolder}}/{{.AppName}}/{{.AppVersion}}
+  type: udm.DeploymentPackage
+  deployables:
+  - name: smokeTest
+    type: smoketest.HttpRequestTest
+    url: '{{"{{"}}smoke.test.url{{"}}"}}'
+    expectedResponseText: Bienvenido a la calculadora
+  - name: webapp
+    type: tomcat.War
+    contextRoot: congruencias
+    file: !file "artifacts/Applications/Calculator/front/10.0.0-B30/webapp/webapp-10.0.0-B65.war"
+  - name: congruenciasds
+    type: tomcat.DataSourceSpec
+    jndiName: jdbc/CongruenciasDB
+    driverClassName: com.mysql.jdbc.Driver
+    url: '{{"{{"}}bdd.url{{"}}"}}'
+    username: '{{"{{"}}bdd.user{{"}}"}}'
+  applicationDependencies:
+    webservices: '[10.0.0-B1,10.0.0-B99]'
