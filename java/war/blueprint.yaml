@@ -27,3 +27,4 @@ parameters:
 
 files:
 - path: xebialabs/application.yaml.tmpl
+- path: xebialabs.yaml
