@@ -1,0 +1,53 @@
+apiVersion: xl/v1
+kind: Blueprint
+metadata:
+  projectName: Orange SPA
+  description: |
+    Este blueprint crea una aplicación con un único componente de tipo orange.Spa.
+    Crea tambien un entorno de prueba para poder desplegar la aplicación.
+  author: Orange
+  version: 1.0
+parameters:
+- name: SpaName
+  description: ¿Qué SPA se va a desplegar?
+  type: Select
+  options:
+    - pae
+    - pae-pub
+    - fdc
+    - mbf
+    - mbfpub
+    - wdt
+    - ame
+    - ame-pub
+    - altamira
+    - pdv
+    - cajaLogadoUnificado
+- name: TechnologyName
+  description: ¿Tecnología?
+  type: Select
+  options:
+    - angularjs
+    - jsp
+    - html
+- name: TestUrl
+  description: ¿Cuál es la URL de pruebas?
+  type: Input
+  default: https://fdc.int.si.orange.es
+- name: AppName
+  description: ¿Cuál es el nombre de la aplicación?
+  type: Input
+- name: AppVersion
+  description: ¿Cuál es la versión de la aplicación a crear?
+  type: Input
+  default: 1.0.0-RC
+- name: FolderName
+  description: ¿En qué directorio se va a ubicar dentro de XL Deploy?
+  type: Select
+  options:
+    - fichadeclienteosp
+    - openapiosp
+
+files:
+- path: templates/spa.yaml.tmpl
+- path: xebialabs.yaml
