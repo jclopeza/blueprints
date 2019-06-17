@@ -1,0 +1,23 @@
+---
+apiVersion: xl-deploy/v1
+kind: Environments
+spec:
+- name: Environments/{{.EnvironmentFolder}}
+  type: core.Directory
+- name: Environments/{{.EnvironmentFolder}}/{{.AppName}}
+  type: core.Directory
+# Creación del diccionario
+- name: Environments/{{.EnvironmentFolder}}/{{.AppName}}/{{.AppName}}-{{.EnvironmentSuffix}}-dict
+  type: udm.Dictionary
+  entries:
+  - folderToDeploy: {{.folderToDeploy}}
+  restrictToApplications:
+  - Applications/{{.FolderName}}/{{.AppName}}
+- name: Environments/{{.EnvironmentFolder}}/{{.AppName}}/{{.AppName}}-{{.EnvironmentSuffix}}
+  type: udm.Environment
+  members:
+  - {{.SshServer}}/{{.ContainerName}}
+  dictionaries:
+  - Environments/{{.EnvironmentFolder}}/{{.AppName}}/{{.AppName}}-{{.EnvironmentSuffix}}-dict
+
+

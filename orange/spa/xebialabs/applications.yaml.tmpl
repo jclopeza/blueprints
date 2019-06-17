@@ -2,6 +2,10 @@
 apiVersion: xl-deploy/v1
 kind: Applications
 spec:
+- name: Applications/{{.FolderName}}
+  type: core.Directory
+- name: Applications/{{.FolderName}}/{{.AppName}}
+  type: udm.Application
 - name: Applications/{{.FolderName}}/{{.AppName}}/{{.AppVersion}}
   type: udm.DeploymentPackage
   deployables:
