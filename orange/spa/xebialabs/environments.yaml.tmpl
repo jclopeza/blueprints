@@ -10,7 +10,7 @@ spec:
 - name: Environments/{{.EnvironmentFolder}}/{{.AppName}}/{{.AppName}}-{{.EnvironmentSuffix}}-dict
   type: udm.Dictionary
   entries:
-  - folderToDeploy: {{.folderToDeploy}}
+    folderToDeploy: {{.folderToDeploy}}
   restrictToApplications:
   - Applications/{{.FolderName}}/{{.AppName}}
 - name: Environments/{{.EnvironmentFolder}}/{{.AppName}}/{{.AppName}}-{{.EnvironmentSuffix}}
