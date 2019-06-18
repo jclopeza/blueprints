@@ -1,0 +1,127 @@
+apiVersion: xl/v1
+kind: Blueprint
+metadata:
+  projectName: Orange SPA
+  description: |
+    Este blueprint crea una aplicación con un único componente de tipo orange.Spa.
+    Crea tambien un entorno de prueba para poder desplegar la aplicación.
+  author: Orange
+  version: 1.0
+parameters:
+# Applications
+- name: SpaName
+  description: ¿Qué SPA se va a desplegar?
+  type: Select
+  options:
+    - pae
+    - pae-pub
+    - fdc
+    - mbf
+    - mbfpub
+    - wdt
+    - ame
+    - ame-pub
+    - altamira
+    - pdv
+    - cajaLogadoUnificado
+- name: TechnologyName
+  description: ¿Tecnología?
+  type: Select
+  options:
+    - angularjs
+    - jsp
+    - html
+- name: TestUrl
+  description: ¿Cuál es la URL de pruebas?
+  type: Input
+  default: https://fdc.int.si.orange.es
+- name: AppName
+  description: ¿Cuál es el nombre de la aplicación?
+  type: Input
+- name: AppVersion
+  description: ¿Cuál es la versión de la aplicación a crear?
+  type: Input
+  default: 1.0.0-RC
+- name: FolderName
+  description: ¿En qué directorio se va a ubicar dentro de XL Deploy?
+  type: Select
+  options:
+    - fichadeclienteosp
+    - openapiosp
+# Infrastructure
+- name: GenerateInfrastructure
+  description: ¿Quieres generar infraestructura para esta aplicación?
+  type: Select
+  options:
+    - "Sí"
+    - "No"
+- name: SshServer
+  description: ¿Bajo qué host se ubicará el container?
+  type: Input
+  default: Infrastructure/0.CROSS/localhost
+  dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
+- name: ContainerName
+  description: ¿Nombre del container?
+  type: Input
+  default: spa-runner-int
+  dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
+- name: HostToDeploy
+  description: ¿Host to deploy?
+  type: Input
+  default: angularJS2_INT
+  dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
+- name: Environment
+  description: ¿Environment?
+  type: Select
+  options:
+    - int
+    - uat
+    - pro
+  dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
+- name: Groups
+  description: ¿Groups?
+  type: Input
+  default: angularJS2_INT
+  dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
+- name: GitLabUrl
+  description: ¿URL del respositorio en GitLab con los playbooks de Ansible?
+  type: Input
+  default: https://torredecontrol.si.orange.es/gitlab/TORRECONTROL/DEPLOY/TORRECONTROL_ANSIBLE_DEPLOY_SPA.git
+  dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
+- name: GitLabUser
+  description: ¿Usuario de GitLab?
+  type: Input
+  default: jenkins-bot
+  dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
+- name: GitLabToken
+  description: ¿Token de GitLab?
+  type: Input
+  secret: true
+  dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
+# Environments
+- name: EnvironmentFolder
+  description: ¿Dónde se creará el nuevo entorno?
+  type: Select
+  options:
+    - 1.Integracion
+    - 2.UAT
+    - 3.Produccion
+  dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
+- name: EnvironmentSuffix
+  description: Sufijo del entorno
+  type: Input
+  value: !expression "EnvironmentFolder == '1.Integracion' ? 'int' : (EnvironmentFolder == '2.UAT' ? 'uat' : 'pro')"
+  dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
+- name: folderToDeploy
+  description: ¿Carpeta en que se desplegará la aplicación?
+  type: Input
+  default: /www/docroot
+  dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
+
+files:
+- path: xebialabs/applications.yaml.tmpl
+- path: xebialabs/infrastructure.yaml.tmpl
+  dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
+- path: xebialabs/environments.yaml.tmpl
+  dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
+- path: xebialabs.yaml.tmpl
