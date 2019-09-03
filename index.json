@@ -1,5 +1,6 @@
 [
   "java/war",
+  "lyhsoft/dependencies-management",
   "orange/microservice",
   "orange/spa"
 ]

@@ -1,0 +1,861 @@
+---
+apiVersion: xl-release/v1
+kind: Templates
+spec:
+- directory: Dependencies management
+  children:
+  - name: Jenkins
+    type: jenkins.Server
+    url: {{.JenkinsUrl}}
+    username: {{.JenkinsUser}}
+    password: {{.JenkinsUserPassword}}
+  - name: Jira
+    type: jira.Server
+    url: {{.JiraUrl}}
+    username: {{.JiraUser}}
+    password: {{.JiraUserPassword}}
+  - name: Sonar
+    type: sonar.Server
+    url: {{.SonarUrl}}
+  - name: unixhost
+    type: host.Unix
+    address: {{.RemoteHost}}
+    port: {{.RemoteHostPort}}
+    username: {{.RemoteHostUser}}
+    password: {{.RemoteHostUserPassword}}
+    connectionType: SCP
+  - name: XL Deploy
+    type: xldeploy.XLDeployServer
+    url: {{.XLDeployUrl}}
+    username: {{.XLDeployUser}}
+    password: {{.XLDeployUserPassword}}
+  - template: dep-application-front
+    phases:
+    - phase: BUILD DAR
+      tasks:
+      - name: Get latest version
+        type: xld.GetLatestVersion
+        server: XL Deploy
+        applicationId: Applications/Calculator/front
+        variableMapping:
+          pythonScript.packageId: ${last-version}
+      - name: Calculate next version
+        type: xlrelease.ExternalScriptTask
+        url: https://raw.githubusercontent.com/jclopeza/xlr-scripts/master/settingNewDarVersion.py
+      - name: Allow to create the DAR file
+        type: xlrelease.Task
+        owner: admin
+      - name: Create DAR and import to XL-Deploy
+        type: remoteScript.Unix
+        script: /opt/xebialabs/devops-utilities/dar-maker.sh -a front -v ${next-version}
+        address: {{.RemoteHost}}
+        username: {{.RemoteHostUser}}
+        password: {{.RemoteHostUserPassword}}
+      color: '#0099CC'
+    - phase: DEV
+      tasks:
+      - name: Complete this task to deploy to DEV
+        type: xlrelease.Task
+        owner: admin
+      - name: Deploy to DEV
+        type: xldeploy.Deploy
+        server: XL Deploy
+        deploymentApplication: Applications/Calculator/front
+        deploymentVersion: ${next-version}
+        deploymentPackage: Applications/Calculator/front/${next-version}
+        deploymentEnvironment: Environments/Development/calculator-dev
+      - name: Release to PRE
+        type: xlrelease.GateTask
+        owner: admin
+      color: '#08B153'
+    - phase: PRE
+      tasks:
+      - name: Ok Test Manager
+        type: xlrelease.GateTask
+        owner: admin
+      - name: Update Ok Test Manager
+        type: xld.UpdateCIProperty
+        server: XL Deploy
+        ciID: Applications/Calculator/front/${next-version}
+        ciProperty: satisfiesOkTestManager
+        propertyValue: "true"
+      - name: Deploy to PRE
+        type: xldeploy.Deploy
+        server: XL Deploy
+        deploymentApplication: Applications/Calculator/front
+        deploymentVersion: ${next-version}
+        deploymentPackage: Applications/Calculator/front/${next-version}
+        deploymentEnvironment: Environments/Preproduction/calculator-pre
+      - name: Release to PRO
+        type: xlrelease.GateTask
+        owner: admin
+      color: '#991C71'
+    - phase: PRO
+      tasks:
+      - name: Check requirements
+        type: xlrelease.GateTask
+        owner: admin
+      - name: Ok Release Manager
+        type: xlrelease.GateTask
+        owner: admin
+      - name: Update Ok Release Manager
+        type: xld.UpdateCIProperty
+        server: XL Deploy
+        ciID: Applications/Calculator/front/${next-version}
+        ciProperty: satisfiesOkReleaseManager
+        propertyValue: "true"
+      - name: Deploy to PRO
+        type: xldeploy.Deploy
+        server: XL Deploy
+        deploymentApplication: Applications/Calculator/front
+        deploymentVersion: ${next-version}
+        deploymentPackage: Applications/Calculator/front/${next-version}
+        deploymentEnvironment: Environments/Production/calculator-pro
+      color: '#FD8D10'
+    tags:
+    - ${next-version}
+    - calculator
+    - front
+    variables:
+    - type: xlrelease.StringVariable
+      key: next-version
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: ansible-dev-out
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: ansible-dev-err
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: ansible-pre-out
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: ansible-pre-err
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: ansible-pro-out
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: ansible-pro-err
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.MapStringStringVariable
+      key: issues
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: last-version
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: component-version
+    scriptUsername: {{.XLReleaseUser}}
+    scriptUserPassword: {{.XLReleaseUserPassword}}
+    riskProfile: Default risk profile
+  - template: dep-application-webservices
+    phases:
+    - phase: COMMIT STAGE
+      tasks:
+      - name: Start pipeline
+        type: xlrelease.Task
+        owner: admin
+      - name: Getting info from Github
+        type: webhook.JsonWebhook
+        URL: https://api.github.com/repos/jclopeza/webservices/branches/master
+        jsonPathExpression: commit.sha
+        jsonPathExpression2: commit.commit.author.email
+        jsonPathExpression3: commit.commit.message
+        variableMapping:
+          pythonScript.result2: ${email}
+          pythonScript.result3: ${message}
+          pythonScript.result: ${sha}
+      - name: Build component webservices
+        type: jenkins.Build
+        jenkinsServer: Jenkins
+        jobName: webservices
+        jobParameters: |-
+          CHANGELOG=${message}
+          EMAIL=${email}
+        variableMapping:
+          pythonScript.buildStatus: ${build-status}
+          pythonScript.buildNumber: ${build-number}
+      - name: Check analysis and quality gate in Sonar
+        type: sonar.checkCompliance
+        sonarServer: Sonar
+        resource: com.xebialabs.congruencias:webservices
+        taskRecoverOp: RUN_SCRIPT
+      color: '#08B153'
+    - phase: NEW VERSION IN XL-DEPLOY
+      tasks:
+      - name: Get latest version
+        type: xld.GetLatestVersion
+        server: XL Deploy
+        applicationId: Applications/Calculator/webservices
+        variableMapping:
+          pythonScript.packageId: ${last-version}
+      - name: Calculate next version
+        type: xlrelease.ExternalScriptTask
+        url: https://raw.githubusercontent.com/jclopeza/xlr-scripts/master/settingNewDarVersion.py
+      - name: Create DAR and import to XL-Deploy
+        type: remoteScript.Unix
+        script: /opt/xebialabs/devops-utilities/dar-maker.sh -a webservices -v ${next-version}
+        address: {{.RemoteHost}}
+        username: {{.RemoteHostUser}}
+        password: {{.RemoteHostUserPassword}}
+      - name: Release to PRE
+        type: xlrelease.GateTask
+        owner: admin
+      color: '#FD8D10'
+    - phase: PRE
+      tasks:
+      - name: Ok Test Manager
+        type: xlrelease.GateTask
+        owner: admin
+      - name: Update Ok Test Manager
+        type: xld.UpdateCIProperty
+        server: XL Deploy
+        ciID: Applications/Calculator/webservices/${next-version}
+        ciProperty: satisfiesOkTestManager
+        propertyValue: "true"
+      - name: Release to PRO
+        type: xlrelease.GateTask
+        owner: admin
+      color: '#0099CC'
+    - phase: PRO
+      tasks:
+      - name: Ok Release Manager
+        type: xlrelease.GateTask
+        owner: admin
+      - name: Update Ok Release Manager
+        type: xld.UpdateCIProperty
+        server: XL Deploy
+        ciID: Applications/Calculator/webservices/${next-version}
+        ciProperty: satisfiesOkReleaseManager
+        propertyValue: "true"
+      color: '#0099CC'
+    tags:
+    - ${next-version}
+    - calculator
+    - webservices
+    variables:
+    - type: xlrelease.StringVariable
+      key: sha
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: email
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: message
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: build-number
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: build-status
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: last-version
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: next-version
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: component-version
+    scriptUsername: {{.XLReleaseUser}}
+    scriptUserPassword: {{.XLReleaseUserPassword}}
+    riskProfile: Default risk profile
+  - template: dep-component-javabdd
+    scheduledStartDate: 2018-09-17T09:00:00+02:00
+    dueDate: 2019-08-10T11:48:56.838+02:00
+    phases:
+    - phase: COMMIT STAGE
+      tasks:
+      - name: Start pipeline
+        type: xlrelease.Task
+        owner: admin
+      - name: Getting info from Github
+        type: webhook.JsonWebhook
+        URL: https://api.github.com/repos/jclopeza/javabdd/branches/master
+        jsonPathExpression: commit.sha
+        jsonPathExpression2: commit.commit.author.email
+        jsonPathExpression3: commit.commit.message
+        variableMapping:
+          pythonScript.result2: ${email}
+          pythonScript.result3: ${message}
+          pythonScript.result: ${sha}
+      - name: Build component javabdd
+        type: jenkins.Build
+        jenkinsServer: Jenkins
+        jobName: javabdd
+        jobParameters: |-
+          CHANGELOG=${message}
+          EMAIL=${email}
+        variableMapping:
+          pythonScript.buildStatus: ${build-status}
+          pythonScript.buildNumber: ${build-number}
+      - name: Check analysis and quality gate in Sonar
+        type: sonar.checkCompliance
+        sonarServer: Sonar
+        resource: com.xebialabs.congruencias:javabdd
+        taskRecoverOp: RUN_SCRIPT
+      color: '#08B153'
+    - phase: RELEASE
+      tasks:
+      - name: Notify consumers new javabdd version available
+        type: xlrelease.NotificationTask
+        addresses:
+        - consumers-javabdd@xlrelease.com
+        subject: There is a new javabdd version available
+        body: There is a new javabdd version available whit build number ${build-number}
+      - name: Allow to use the new library in webapp
+        type: xlrelease.GateTask
+        owner: admin
+      - name: Modify pom.xml in webapp
+        type: remoteScript.Unix
+        script: ./manage-dependencies.sh -v ${component-version}-B${build-number}
+        remotePath: /opt/xebialabs/devops-utilities
+        address: {{.RemoteHost}}
+        username: {{.RemoteHostUser}}
+        password: {{.RemoteHostUserPassword}}
+      color: '#991C71'
+    - phase: RESTART BUILD WEBAPP
+      tasks:
+      - name: Get release info
+        type: xlrelease.SequentialGroup
+        tasks:
+        - name: Get release Id
+          type: webhook.JsonWebhook
+          URL: http://localhost:5516/api/v1/releases/byTitle?releaseTitle=webapp%20${component-version}
+          username: {{.XLReleaseUser}}
+          password: {{.XLReleaseUserPassword}}
+          jsonPathExpression: '[-1].id'
+          variableMapping:
+            pythonScript.result: ${id.release.webapp}
+        - name: Get phase Id
+          type: webhook.JsonWebhook
+          URL: http://localhost:5516/api/v1/phases/byTitle?phaseTitle=COMMIT%20STAGE&releaseId=${id.release.webapp}
+          username: {{.XLReleaseUser}}
+          password: {{.XLReleaseUserPassword}}
+          jsonPathExpression: '[-1].id'
+          variableMapping:
+            pythonScript.result: ${id.phase.webapp}
+        - name: Get task Id
+          type: webhook.JsonWebhook
+          URL: http://localhost:5516/api/v1/tasks/byTitle?taskTitle=Getting%20info%20from%20Github&phaseTitle=COMMIT%20STAGE&releaseId=${id.release.webapp}
+          username: {{.XLReleaseUser}}
+          password: {{.XLReleaseUserPassword}}
+          jsonPathExpression: '[-1].id'
+          variableMapping:
+            pythonScript.result: ${id.task.webapp}
+      - name: Restarting build phase in webapp
+        type: webhook.JsonWebhook
+        URL: http://localhost:5516/api/v1/releases/${id.release.webapp}/restart?fromPhaseId=${id.phase.webapp}&fromTaskId=${id.task.webapp}&phaseVersion=LATEST&resume=false
+        method: POST
+        username: {{.XLReleaseUser}}
+        password: {{.XLReleaseUserPassword}}
+      color: '#FD8D10'
+    - phase: PRO
+      tasks:
+      - name: Allow this library to run into Production
+        type: xlrelease.GateTask
+        owner: admin
+      color: '#D94C3D'
+    tags:
+    - ${next-version}
+    - calculator
+    - javabdd
+    variables:
+    - type: xlrelease.StringVariable
+      key: sha
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: email
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: message
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: build-number
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: build-status
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: component-version
+    - type: xlrelease.StringVariable
+      key: id.release.webapp
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: id.task.webapp
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: id.phase.webapp
+      requiresValue: false
+      showOnReleaseStart: false
+    scriptUsername: {{.XLReleaseUser}}
+    scriptUserPassword: {{.XLReleaseUserPassword}}
+    riskProfile: Default risk profile
+  - template: dep-component-schemabdd
+    scheduledStartDate: 2018-09-17T09:00:00+02:00
+    dueDate: 2019-08-10T11:48:57.553+02:00
+    phases:
+    - phase: COMMIT STAGE
+      tasks:
+      - name: Start pipeline
+        type: xlrelease.Task
+        owner: admin
+      - name: Getting info from Github
+        type: webhook.JsonWebhook
+        URL: https://api.github.com/repos/jclopeza/schemabdd/branches/master
+        jsonPathExpression: commit.sha
+        jsonPathExpression2: commit.commit.author.email
+        jsonPathExpression3: commit.commit.message
+        variableMapping:
+          pythonScript.result2: ${email}
+          pythonScript.result3: ${message}
+          pythonScript.result: ${sha}
+      - name: Build component schemabdd
+        type: jenkins.Build
+        jenkinsServer: Jenkins
+        jobName: schemabdd
+        jobParameters: |-
+          CHANGELOG=${message}
+          EMAIL=${email}
+        variableMapping:
+          pythonScript.buildStatus: ${build-status}
+          pythonScript.buildNumber: ${build-number}
+      - name: Execute update and rollback
+        type: xlrelease.Task
+        owner: admin
+      color: '#08B153'
+    - phase: TRIGGER INTEGRATION PIPELINE
+      tasks:
+      - name: Allow this component to create a new DAR version
+        type: xlrelease.GateTask
+        owner: admin
+      - name: Get release info
+        type: xlrelease.SequentialGroup
+        tasks:
+        - name: Get release Id
+          type: webhook.JsonWebhook
+          URL: http://localhost:5516/api/v1/releases/byTitle?releaseTitle=front%20${component-version}
+          username: {{.XLReleaseUser}}
+          password: {{.XLReleaseUserPassword}}
+          jsonPathExpression: '[-1].id'
+          variableMapping:
+            pythonScript.result: ${id.release}
+        - name: Get phase Id
+          type: webhook.JsonWebhook
+          URL: http://localhost:5516/api/v1/phases/byTitle?phaseTitle=BUILD%20DAR&releaseId=${id.release}
+          username: {{.XLReleaseUser}}
+          password: {{.XLReleaseUserPassword}}
+          jsonPathExpression: '[-1].id'
+          variableMapping:
+            pythonScript.result: ${id.phase}
+        - name: Get task Id
+          type: webhook.JsonWebhook
+          URL: http://localhost:5516/api/v1/tasks/byTitle?taskTitle=Get%20latest%20version&phaseTitle=BUILD%20DAR&releaseId=${id.release}
+          username: {{.XLReleaseUser}}
+          password: {{.XLReleaseUserPassword}}
+          jsonPathExpression: '[-1].id'
+          variableMapping:
+            pythonScript.result: ${id.task}
+      - name: Restart build DAR phase
+        type: webhook.JsonWebhook
+        URL: http://localhost:5516/api/v1/releases/${id.release}/restart?fromPhaseId=${id.phase}&fromTaskId=${id.task}&phaseVersion=LATEST&resume=false
+        method: POST
+        username: {{.XLReleaseUser}}
+        password: {{.XLReleaseUserPassword}}
+      color: '#FD8D10'
+    - phase: PRO
+      tasks:
+      - name: Allow this component to run into Production
+        type: xlrelease.GateTask
+        owner: admin
+      color: '#D94C3D'
+    tags:
+    - ${next-version}
+    - calculator
+    - schemabdd
+    variables:
+    - type: xlrelease.StringVariable
+      key: sha
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: email
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: message
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: build-number
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: build-status
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: last-version
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: next-version
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: id.release
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: id.phase
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: id.task
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: component-version
+    scriptUsername: {{.XLReleaseUser}}
+    scriptUserPassword: {{.XLReleaseUserPassword}}
+    riskProfile: Default risk profile
+  - template: dep-component-webapp
+    scheduledStartDate: 2018-09-17T09:00:00+02:00
+    dueDate: 2019-08-10T11:48:58.012+02:00
+    phases:
+    - phase: COMMIT STAGE
+      tasks:
+      - name: Getting info from Github
+        type: webhook.JsonWebhook
+        URL: https://api.github.com/repos/jclopeza/webapp/branches/master
+        jsonPathExpression: commit.sha
+        jsonPathExpression2: commit.commit.author.email
+        jsonPathExpression3: commit.commit.message
+        variableMapping:
+          pythonScript.result2: ${email}
+          pythonScript.result3: ${message}
+          pythonScript.result: ${sha}
+      - name: Start build
+        type: xlrelease.Task
+        owner: admin
+      - name: Build component webapp
+        type: jenkins.Build
+        jenkinsServer: Jenkins
+        jobName: webapp
+        jobParameters: |-
+          CHANGELOG=${message}
+          EMAIL=${email}
+        variableMapping:
+          pythonScript.buildStatus: ${build-status}
+          pythonScript.buildNumber: ${build-number}
+      - name: Check analysis and quality gate in Sonar
+        type: sonar.checkCompliance
+        sonarServer: Sonar
+        resource: com.xebialabs.congruencias:webapp
+        taskRecoverOp: RUN_SCRIPT
+      color: '#08B153'
+    - phase: TRIGGER INTEGRATION PIPELINE
+      tasks:
+      - name: Allow this version to create a new integration pipeline
+        type: xlrelease.GateTask
+        owner: admin
+      - name: Getting application front info
+        type: xlrelease.SequentialGroup
+        tasks:
+        - name: Get release Id
+          type: webhook.JsonWebhook
+          URL: http://localhost:5516/api/v1/releases/byTitle?releaseTitle=front%20${component-version}
+          username: {{.XLReleaseUser}}
+          password: {{.XLReleaseUserPassword}}
+          jsonPathExpression: '[-1].id'
+          variableMapping:
+            pythonScript.result: ${id.release}
+        - name: Get phase Id
+          type: webhook.JsonWebhook
+          URL: http://localhost:5516/api/v1/phases/byTitle?phaseTitle=BUILD%20DAR&releaseId=${id.release}
+          username: {{.XLReleaseUser}}
+          password: {{.XLReleaseUserPassword}}
+          jsonPathExpression: '[-1].id'
+          variableMapping:
+            pythonScript.result: ${id.phase}
+        - name: Get task Id
+          type: webhook.JsonWebhook
+          URL: http://localhost:5516/api/v1/tasks/byTitle?taskTitle=Get%20latest%20version&phaseTitle=BUILD%20DAR&releaseId=${id.release}
+          username: {{.XLReleaseUser}}
+          password: {{.XLReleaseUserPassword}}
+          jsonPathExpression: '[-1].id'
+          variableMapping:
+            pythonScript.result: ${id.task}
+      - name: Restart build DAR phase
+        type: webhook.JsonWebhook
+        URL: http://localhost:5516/api/v1/releases/${id.release}/restart?fromPhaseId=${id.phase}&fromTaskId=${id.task}&phaseVersion=LATEST&resume=false
+        method: POST
+        username: {{.XLReleaseUser}}
+        password: {{.XLReleaseUserPassword}}
+      color: '#FD8D10'
+    - phase: PRO
+      tasks:
+      - name: Wait for approval of javabdd library
+        type: xlrelease.GateTask
+      - name: Allow this component to run into Production
+        type: xlrelease.GateTask
+        owner: admin
+      color: '#D94C3D'
+    tags:
+    - ${next-version}
+    - calculator
+    - webapp
+    variables:
+    - type: xlrelease.StringVariable
+      key: sha
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: email
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: message
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: build-number
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: build-status
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: last-version
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: next-version
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: component-version
+    - type: xlrelease.StringVariable
+      key: id.release
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: id.phase
+      requiresValue: false
+      showOnReleaseStart: false
+    - type: xlrelease.StringVariable
+      key: id.task
+      requiresValue: false
+      showOnReleaseStart: false
+    scriptUsername: {{.XLReleaseUser}}
+    scriptUserPassword: {{.XLReleaseUserPassword}}
+    riskProfile: Default risk profile
+  - template: dep-master-release
+    scheduledStartDate: 2018-10-15T09:00:00+02:00
+    dueDate: 2019-08-10T11:48:58.541+02:00
+    phases:
+    - phase: DEV
+      tasks:
+      - name: Deployed to DEV
+        type: xlrelease.GateTask
+      - name: Update Jira issues
+        type: jira.UpdateIssue
+        jiraServer: Jira
+        issueId: PRSCRUM-7
+        comment: Deployed to DEV
+      color: '#0099CC'
+    - phase: PRE
+      tasks:
+      - name: Deployed to PRE
+        type: xlrelease.GateTask
+      - name: Update Jira issues
+        type: jira.UpdateIssue
+        jiraServer: Jira
+        issueId: PRSCRUM-7
+        comment: Deployed to PRE
+      color: '#D94C3D'
+    - phase: PRO
+      tasks:
+      - name: Deployed to PRO
+        type: xlrelease.GateTask
+      - name: Update Jira issues
+        type: jira.UpdateIssue
+        jiraServer: Jira
+        issueId: PRSCRUM-7
+        comment: Deployed to PRO
+      - name: Notify ${component-version} is alive!
+        type: xlrelease.NotificationTask
+        addresses:
+        - josecarlos.lopezayala@gmail.com
+        subject: Version ${component-version} is alive!
+        body: |-
+          The version ${component-version} is alive!
+
+          It has just been deployed into production.
+      color: '#08B153'
+    tags:
+    - ${next-version}
+    - calculator
+    variables:
+    - type: xlrelease.StringVariable
+      key: component-version
+    scriptUsername: {{.XLReleaseUser}}
+    scriptUserPassword: {{.XLReleaseUserPassword}}
+    riskProfile: Default risk profile
+  - type: xlrelease.Dashboard
+    owner: admin
+    tiles:
+    - name: Release progress
+      type: xlrelease.ReleaseProgressTile
+    - name: Release summary
+      type: xlrelease.ReleaseSummaryTile
+    - name: Resource usage
+      type: xlrelease.ResourceUsageTile
+    - name: Release timeline
+      type: xlrelease.TimelineTile
+    - name: Release health
+      type: xlrelease.ReleaseHealthTile
+    parentTemplate: dep-application-front
+  - type: xlrelease.Dashboard
+    owner: admin
+    tiles:
+    - name: Release progress
+      type: xlrelease.ReleaseProgressTile
+    - name: Release summary
+      type: xlrelease.ReleaseSummaryTile
+    - name: Resource usage
+      type: xlrelease.ResourceUsageTile
+    - name: Release timeline
+      type: xlrelease.TimelineTile
+    - name: Release health
+      type: xlrelease.ReleaseHealthTile
+    parentTemplate: dep-application-webservices
+  - type: xlrelease.Dashboard
+    owner: admin
+    tiles:
+    - name: Release progress
+      type: xlrelease.ReleaseProgressTile
+    - name: Release summary
+      type: xlrelease.ReleaseSummaryTile
+    - name: Resource usage
+      type: xlrelease.ResourceUsageTile
+    - name: Release timeline
+      type: xlrelease.TimelineTile
+    - name: Release health
+      type: xlrelease.ReleaseHealthTile
+    parentTemplate: dep-component-javabdd
+  - type: xlrelease.Dashboard
+    owner: admin
+    tiles:
+    - name: Release progress
+      type: xlrelease.ReleaseProgressTile
+    - name: Release summary
+      type: xlrelease.ReleaseSummaryTile
+    - name: Resource usage
+      type: xlrelease.ResourceUsageTile
+    - name: Release timeline
+      type: xlrelease.TimelineTile
+    - name: Release health
+      type: xlrelease.ReleaseHealthTile
+    parentTemplate: dep-component-schemabdd
+  - type: xlrelease.Dashboard
+    owner: admin
+    tiles:
+    - name: Release progress
+      type: xlrelease.ReleaseProgressTile
+    - name: Release summary
+      type: xlrelease.ReleaseSummaryTile
+    - name: Resource usage
+      type: xlrelease.ResourceUsageTile
+    - name: Release timeline
+      type: xlrelease.TimelineTile
+    - name: Release health
+      type: xlrelease.ReleaseHealthTile
+    parentTemplate: dep-component-webapp
+  - type: xlrelease.Dashboard
+    owner: admin
+    tiles:
+    - name: Release progress
+      type: xlrelease.ReleaseProgressTile
+    - name: Release summary
+      type: xlrelease.ReleaseSummaryTile
+    - name: Resource usage
+      type: xlrelease.ResourceUsageTile
+    - name: Release timeline
+      type: xlrelease.TimelineTile
+    - name: Release health
+      type: xlrelease.ReleaseHealthTile
+    parentTemplate: dep-master-release
+---
+apiVersion: xl-release/v1
+kind: Permissions
+spec:
+- directory: Dependencies management
+  teams:
+  - name: Template Owner
+    users:
+    - admin
+    permissions:
+    - template#edit
+    - template#lock_task
+    - template#view
+    - folder#view
+    - template#edit_triggers
+    - template#edit_precondition
+    - template#edit_security
+    - template#create_release
+    - template#edit_failure_handler
+  - name: Folder Owner
+    users:
+    - admin
+    permissions:
+    - folder#edit_variables
+    - group#edit
+    - folder#edit_configuration
+    - folder#view
+    - dashboard#edit
+    - folder#edit_security
+    - folder#edit
+    - dashboard#view
+    - group#view
+  - name: Release Admin
+    users:
+    - admin
+    permissions:
+    - release#edit_precondition
+    - release#edit
+    - release#reassign_task
+    - release#edit_security
+    - release#view
+    - release#lock_task
+    - release#start
+    - release#edit_blackout
+    - release#edit_failure_handler
+    - folder#view
+    - release#abort
+    - release#edit_task

@@ -1,0 +1,74 @@
+apiVersion: xl/v1
+kind: Blueprint
+metadata:
+  projectName: Dependencies management
+  description: |
+    Este blueprint crea varias templates para construir los distintos componentes de la aplicación calculadora.
+  author: JC
+  version: 1.0
+parameters:
+# Passwords para las herramientas que intervienen
+- name: XLReleaseUser
+  description: ¿Cuál es el usuario con el que se ejcutarán los scripts de las templates de XL Release?
+  type: Input
+  default: admin
+- name: XLReleaseUserPassword
+  description: ¿Cuál es la password del usuario de XL Release?
+  type: SecretInput
+- name: RemoteHost
+  description: ¿Cuál es la máquina con las DevOps utilities?
+  type: Input
+  default: localhost
+- name: RemoteHostPort
+  description: ¿Cuál es el puerto de acceso?
+  type: Input
+  default: 22
+- name: RemoteHostUser
+  description: ¿Cuál es el usuario con el que se accede vía SSH?
+  type: Input
+  default: jcla
+- name: RemoteHostUserPassword
+  description: ¿Cuál es la password de acceso para ese usuario?
+  type: SecretInput
+- name: JenkinsUrl
+  description: ¿Cuál es la URL de Jenkins?
+  type: Input
+  default: http://localhost:8080
+- name: JenkinsUser
+  description: ¿Cuál es el usuario de Jenkins?
+  type: Input
+  default: admin
+- name: JenkinsUserPassword
+  description: ¿Cuál es la password del usuario de Jenkins?
+  type: SecretInput
+- name: XLDeployUrl
+  description: ¿Cuál es la URL de XL Deploy?
+  type: Input
+  default: http://localhost:4516
+- name: XLDeployUser
+  description: ¿Cuál es el usuario de XL Deploy?
+  type: Input
+  default: admin
+- name: XLDeployUserPassword
+  description: ¿Cuál es la password del usuario de XL Deploy?
+  type: SecretInput
+- name: JiraUrl
+  description: ¿Cuál es la URL de Jira?
+  type: Input
+  default: http://localhost:8082
+- name: JiraUser
+  description: ¿Cuál es el usuario de Jira?
+  type: Input
+  default: admin
+- name: JiraUserPassword
+  description: ¿Cuál es la password del usuario de Jira?
+  type: SecretInput
+- name: SonarUrl
+  description: ¿Cuál es la URL de Sonar?
+  type: Input
+  default: http://localhost:9000
+
+files:
+- path: xebialabs/dependencies-management.yaml.tmpl
+- path: xebialabs/create-releases-for-calculator.yaml.tmpl
+- path: xebialabs.yaml.tmpl

@@ -1,0 +1,333 @@
+---
+apiVersion: xl-release/v1
+kind: Templates
+spec:
+- directory: Utilities
+---
+apiVersion: xl-release/v1
+kind: Templates
+metadata:
+  home: Utilities
+spec:
+- template: create-releases-for-calculator
+  phases:
+  - phase: ADD COMPONENT RELEASES
+    tasks:
+    - name: Create release javabdd ${release-version}
+      type: xlrelease.CreateReleaseTask
+      tags:
+      - ${release-version}
+      - calculator
+      newReleaseTitle: javabdd ${release-version}
+      templateId: Dependencies management/dep-component-javabdd
+      folderId: Dependencies management
+      templateVariables:
+      - type: xlrelease.StringVariable
+        key: component-version
+        value: ${release-version}
+      createdReleaseId: ${id.release.javabdd}
+      releaseTags:
+      - calculator
+      - ${release-version}
+      - javabdd
+    - name: Create release webapp ${release-version}
+      type: xlrelease.CreateReleaseTask
+      tags:
+      - ${release-version}
+      - calculator
+      newReleaseTitle: webapp ${release-version}
+      templateId: Dependencies management/dep-component-webapp
+      folderId: Dependencies management
+      templateVariables:
+      - type: xlrelease.StringVariable
+        key: component-version
+        value: ${release-version}
+      createdReleaseId: ${id.release.webapp}
+      releaseTags:
+      - webapp
+      - calculator
+      - ${release-version}
+    - name: Create release schemabdd ${release-version}
+      type: xlrelease.CreateReleaseTask
+      tags:
+      - ${release-version}
+      - calculator
+      newReleaseTitle: schemabdd ${release-version}
+      templateId: Dependencies management/dep-component-schemabdd
+      folderId: Dependencies management
+      templateVariables:
+      - type: xlrelease.StringVariable
+        key: component-version
+        value: ${release-version}
+      createdReleaseId: ${id.release.schemabdd}
+      releaseTags:
+      - schemabdd
+      - calculator
+      - ${release-version}
+    - name: Create release front ${release-version}
+      type: xlrelease.CreateReleaseTask
+      tags:
+      - ${release-version}
+      - calculator
+      newReleaseTitle: front ${release-version}
+      templateId: Dependencies management/dep-application-front
+      folderId: Dependencies management
+      templateVariables:
+      - type: xlrelease.StringVariable
+        key: component-version
+        value: ${release-version}
+      createdReleaseId: ${id.release.front}
+      releaseTags:
+      - calculator
+      - ${release-version}
+      - front
+    - name: Create release webservice ${release-version}
+      type: xlrelease.CreateReleaseTask
+      tags:
+      - ${release-version}
+      - calculator
+      newReleaseTitle: webservice ${release-version}
+      templateId: Dependencies management/dep-application-webservices
+      folderId: Dependencies management
+      templateVariables:
+      - type: xlrelease.StringVariable
+        key: component-version
+        value: ${release-version}
+      createdReleaseId: ${id.release.webservice}
+      releaseTags:
+      - calculator
+      - ${release-version}
+      - webservice
+    - name: Create release release calculator ${release-version}
+      type: xlrelease.CreateReleaseTask
+      tags:
+      - ${release-version}
+      - calculator
+      newReleaseTitle: release calculator ${release-version}
+      templateId: Dependencies management/dep-master-release
+      folderId: Dependencies management
+      templateVariables:
+      - type: xlrelease.StringVariable
+        key: component-version
+        value: ${release-version}
+      createdReleaseId: ${id.release.release}
+      releaseTags:
+      - calculator
+      - ${release-version}
+    color: '#0099CC'
+  - phase: GETTING KEY TASKS
+    tasks:
+    - name: Id task wait in webapp ${release-version}
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/byTitle?taskTitle=Wait%20for%20approval%20of%20javabdd%20library&phaseTitle=PRO&releaseId=${id.release.webapp}
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+      jsonPathExpression: '[-1].id'
+      variableMapping:
+        pythonScript.result: ${id.task.webapp}
+    - name: Id task pro in webapp ${release-version}
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/byTitle?taskTitle=Allow%20this%20component%20to%20run%20into%20Production&phaseTitle=PRO&releaseId=${id.release.webapp}
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+      jsonPathExpression: '[-1].id'
+      variableMapping:
+        pythonScript.result: ${id.task.webapp.prod}
+    - name: Id task in javabdd ${release-version}
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/byTitle?taskTitle=Allow%20this%20library%20to%20run%20into%20Production&phaseTitle=PRO&releaseId=${id.release.javabdd}
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+      jsonPathExpression: '[-1].id'
+      variableMapping:
+        pythonScript.result: ${id.task.javabdd}
+    - name: Id task pro in schemabdd ${release-version}
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/byTitle?taskTitle=Allow%20this%20component%20to%20run%20into%20Production&phaseTitle=PRO&releaseId=${id.release.schemabdd}
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+      jsonPathExpression: '[-1].id'
+      variableMapping:
+        pythonScript.result: ${id.task.schemabdd.prod}
+    - name: Id task wait in front ${release-version}
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/byTitle?taskTitle=Check%20requirements&phaseTitle=PRO&releaseId=${id.release.front}
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+      jsonPathExpression: '[-1].id'
+      variableMapping:
+        pythonScript.result: ${id.task.front}
+    - name: Id task Deploy to DEV in front ${release-version}
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/byTitle?taskTitle=Deploy%20to%20DEV&phaseTitle=DEV&releaseId=${id.release.front}
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+      jsonPathExpression: '[-1].id'
+      variableMapping:
+        pythonScript.result: ${id.task.front.deploy.dev}
+    - name: Id task Deploy to PRE in front ${release-version}
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/byTitle?taskTitle=Deploy%20to%20PRE&phaseTitle=PRE&releaseId=${id.release.front}
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+      jsonPathExpression: '[-1].id'
+      variableMapping:
+        pythonScript.result: ${id.task.front.deploy.pre}
+    - name: Id task Deploy to PRO in front ${release-version}
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/byTitle?taskTitle=Deploy%20to%20PRO&phaseTitle=PRO&releaseId=${id.release.front}
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+      jsonPathExpression: '[-1].id'
+      variableMapping:
+        pythonScript.result: ${id.task.front.deploy.pro}
+    - name: Id task Deployed to DEV in release calculator ${release-version}
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/byTitle?taskTitle=Deployed%20to%20DEV&phaseTitle=DEV&releaseId=${id.release.release}
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+      jsonPathExpression: '[-1].id'
+      variableMapping:
+        pythonScript.result: ${id.task.release.deployed.dev}
+    - name: Id task Deployed to PRE in release calculator ${release-version}
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/byTitle?taskTitle=Deployed%20to%20PRE&phaseTitle=PRE&releaseId=${id.release.release}
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+      jsonPathExpression: '[-1].id'
+      variableMapping:
+        pythonScript.result: ${id.task.release.deployed.pre}
+    - name: Id task Deployed to PRO in release calculator ${release-version}
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/byTitle?taskTitle=Deployed%20to%20PRO&phaseTitle=PRO&releaseId=${id.release.release}
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+      jsonPathExpression: '[-1].id'
+      variableMapping:
+        pythonScript.result: ${id.task.release.deployed.pro}
+    color: '#0099CC'
+  - phase: CREATING RELATIONSHIPS
+    tasks:
+    - name: Linking webapp ${release-version} to javabdd ${release-version}
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/${id.task.webapp}/dependencies/${id.task.javabdd}
+      method: POST
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+    - name: Linking front ${release-version} to webapp ${release-version}
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/${id.task.front}/dependencies/${id.task.webapp.prod}
+      method: POST
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+    - name: Linking front ${release-version} to schemabdd ${release-version}
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/${id.task.front}/dependencies/${id.task.schemabdd.prod}
+      method: POST
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+    - name: Linking release calculator ${release-version} to front ${release-version} (DEV)
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/${id.task.release.deployed.dev}/dependencies/${id.task.front.deploy.dev}
+      method: POST
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+    - name: Linking release calculator ${release-version} to front ${release-version} (PRE)
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/${id.task.release.deployed.pre}/dependencies/${id.task.front.deploy.pre}
+      method: POST
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+    - name: Linking release calculator ${release-version} to front ${release-version} (PRO)
+      type: webhook.JsonWebhook
+      URL: http://localhost:5516/api/v1/tasks/${id.task.release.deployed.pro}/dependencies/${id.task.front.deploy.pro}
+      method: POST
+      username: {{.XLReleaseUser}}
+      password: {{.XLReleaseUserPassword}}
+    color: '#0099CC'
+  - phase: UPDATE POM VERSIONS
+    tasks:
+    - name: Update pom.xml in components
+      type: remoteScript.Unix
+      script: ./update-pom-versions.sh -v ${release-version}
+      remotePath: /opt/xebialabs/devops-utilities
+      address: {{.RemoteHost}}
+      username: {{.RemoteHostUser}}
+      password: {{.RemoteHostUserPassword}}
+    color: '#0099CC'
+  variables:
+  - type: xlrelease.StringVariable
+    key: release-version
+    label: Release Version
+    description: Version of the application that is going to be released
+  - type: xlrelease.StringVariable
+    key: id.release.javabdd
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.release.webapp
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.release.schemabdd
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.release.webservice
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.release.front
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.task.webapp
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.task.javabdd
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.task.webapp.prod
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.task.schemabdd.prod
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.task.front
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.task.front.deploy.dev
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.task.front.deploy.pre
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.task.front.deploy.pro
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.task.release.deployed.dev
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.task.release.deployed.pre
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.task.release.deployed.pro
+    requiresValue: false
+    showOnReleaseStart: false
+  - type: xlrelease.StringVariable
+    key: id.release.release
+    requiresValue: false
+    showOnReleaseStart: false
+  scriptUsername: {{.XLReleaseUser}}
+  scriptUserPassword: {{.XLReleaseUserPassword}}
+  riskProfile: Default risk profile
