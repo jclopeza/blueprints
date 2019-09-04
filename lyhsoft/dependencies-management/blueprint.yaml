@@ -71,5 +71,4 @@ parameters:
 files:
 - path: xebialabs/dependencies-management.yaml.tmpl
 - path: xebialabs/create-releases-for-calculator.yaml.tmpl
-- path: xebialabs/application.yaml.tmpl
 - path: xebialabs.yaml.tmpl
