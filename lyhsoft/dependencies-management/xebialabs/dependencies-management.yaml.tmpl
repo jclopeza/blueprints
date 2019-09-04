@@ -36,7 +36,7 @@ spec:
       - name: Get latest version
         type: xld.GetLatestVersion
         server: XL Deploy
-        applicationId: Applications/Calculator/front
+        applicationId: Applications/Applications/application-calculator/front
         variableMapping:
           pythonScript.packageId: ${last-version}
       - name: Calculate next version
@@ -60,10 +60,10 @@ spec:
       - name: Deploy to DEV
         type: xldeploy.Deploy
         server: XL Deploy
-        deploymentApplication: Applications/Calculator/front
+        deploymentApplication: Applications/Applications/application-calculator/front
         deploymentVersion: ${next-version}
-        deploymentPackage: Applications/Calculator/front/${next-version}
-        deploymentEnvironment: Environments/Development/calculator-dev
+        deploymentPackage: Applications/Applications/application-calculator/front/${next-version}
+        deploymentEnvironment: Environments/application-calculator/application-calculator-dev/application-calculator-dev
       - name: Release to PRE
         type: xlrelease.GateTask
         owner: admin
@@ -76,16 +76,16 @@ spec:
       - name: Update Ok Test Manager
         type: xld.UpdateCIProperty
         server: XL Deploy
-        ciID: Applications/Calculator/front/${next-version}
+        ciID: Applications/Applications/application-calculator/front/${next-version}
         ciProperty: satisfiesOkTestManager
         propertyValue: "true"
       - name: Deploy to PRE
         type: xldeploy.Deploy
         server: XL Deploy
-        deploymentApplication: Applications/Calculator/front
+        deploymentApplication: Applications/Applications/application-calculator/front
         deploymentVersion: ${next-version}
-        deploymentPackage: Applications/Calculator/front/${next-version}
-        deploymentEnvironment: Environments/Preproduction/calculator-pre
+        deploymentPackage: Applications/Applications/application-calculator/front/${next-version}
+        deploymentEnvironment: Environments/application-calculator/application-calculator-pre/application-calculator-pre
       - name: Release to PRO
         type: xlrelease.GateTask
         owner: admin
@@ -101,16 +101,16 @@ spec:
       - name: Update Ok Release Manager
         type: xld.UpdateCIProperty
         server: XL Deploy
-        ciID: Applications/Calculator/front/${next-version}
+        ciID: Applications/Applications/application-calculator/front/${next-version}
         ciProperty: satisfiesOkReleaseManager
         propertyValue: "true"
       - name: Deploy to PRO
         type: xldeploy.Deploy
         server: XL Deploy
-        deploymentApplication: Applications/Calculator/front
+        deploymentApplication: Applications/Applications/application-calculator/front
         deploymentVersion: ${next-version}
-        deploymentPackage: Applications/Calculator/front/${next-version}
-        deploymentEnvironment: Environments/Production/calculator-pro
+        deploymentPackage: Applications/Applications/application-calculator/front/${next-version}
+        deploymentEnvironment: Environments/application-calculator/application-calculator-pro/application-calculator-pro
       color: '#FD8D10'
     tags:
     - ${next-version}
@@ -196,7 +196,7 @@ spec:
       - name: Get latest version
         type: xld.GetLatestVersion
         server: XL Deploy
-        applicationId: Applications/Calculator/webservices
+        applicationId: Applications/Applications/application-calculator/webservices
         variableMapping:
           pythonScript.packageId: ${last-version}
       - name: Calculate next version
@@ -220,7 +220,7 @@ spec:
       - name: Update Ok Test Manager
         type: xld.UpdateCIProperty
         server: XL Deploy
-        ciID: Applications/Calculator/webservices/${next-version}
+        ciID: Applications/Applications/application-calculator/webservices/${next-version}
         ciProperty: satisfiesOkTestManager
         propertyValue: "true"
       - name: Release to PRO
@@ -235,7 +235,7 @@ spec:
       - name: Update Ok Release Manager
         type: xld.UpdateCIProperty
         server: XL Deploy
-        ciID: Applications/Calculator/webservices/${next-version}
+        ciID: Applications/Applications/application-calculator/webservices/${next-version}
         ciProperty: satisfiesOkReleaseManager
         propertyValue: "true"
       color: '#0099CC'
