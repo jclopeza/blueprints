@@ -37,12 +37,12 @@ parameters:
 - name: ServicePort
   description: Puerto expuesto por el servicio
   type: Input
-  default: 80
+  default: 5000
 
 files:
-- path: xebialabs/applications.yaml.tmpl
+- path: xebialabs/deployment.yaml.tmpl
 # - path: xebialabs/infrastructure.yaml.tmpl
 #   dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
 # - path: xebialabs/environments.yaml.tmpl
 #   dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
-# - path: xebialabs.yaml.tmpl
+- path: xebialabs.yaml.tmpl
