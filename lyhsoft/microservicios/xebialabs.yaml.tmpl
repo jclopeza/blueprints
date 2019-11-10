@@ -1,0 +1,10 @@
+---
+apiVersion: xl/v1
+kind: Import
+metadata:
+ imports:
+   - xebialabs/applications.yaml
+{{if eq .GenerateInfrastructure "Sí"}}   - xebialabs/infrastructure.yaml
+   - xebialabs/environments.yaml
+{{- end}}
+

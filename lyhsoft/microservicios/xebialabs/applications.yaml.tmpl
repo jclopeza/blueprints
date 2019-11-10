@@ -1,0 +1,34 @@
+---
+apiVersion: xl-deploy/v1
+kind: Applications
+spec:
+- name: Applications/Applications
+  type: core.Directory
+- name: Applications/Applications/application-{{.ApplicationName}}-k8s
+  type: core.Directory
+- name: Applications/Applications/application-{{.ApplicationName}}-k8s/deployment-{{.MicroserviceName}}
+  type: udm.Application
+- name: Applications/Applications/application-{{.ApplicationName}}-k8s/deployment-{{.MicroserviceName}}/{{.MicroserviceVersion}}
+  type: udm.DeploymentPackage
+  deployables:
+  - name: deployment-{{.MicroserviceName}}-{{.MicroserviceVersion}}
+    type: k8s.DeploymentSpec
+    podCreateDeleteRetryCount: 20
+    restartPolicy: Always
+    containers:
+    - name: container
+      type: k8s.ContainerSpec
+      containerName: {{.MicroserviceName}}
+      image: lyhsoft-registry:8084/{{.MicroserviceName}}:{{.MicroserviceVersion}}
+      ports:
+      - name: port
+        type: k8s.ContainerPortSpec
+        containerPort: {{.ContainerPort}}
+    labels:
+      run: {{.MicroserviceName}}
+      version: {{.MicroserviceVersion}}
+    deploymentName: !format deployment-%microserviceName%-%microserviceVersionLower%
+    replicasCount: "1"
+    matchLabels:
+      run: {{.MicroserviceName}}
+      version: {{.MicroserviceVersion}}
