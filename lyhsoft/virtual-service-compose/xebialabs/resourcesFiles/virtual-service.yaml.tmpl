@@ -17,10 +17,10 @@ spec:
         subset: {{.MicroserviceName}}-{{.MicroserviceVersion1 | replace "." "-"}}
         port:
           number: {{.ServicePort1}}
-      weight: {{traffic-percentage-for-service-{{.MicroserviceVersion1}}}}
+      weight: {{"{{"}}traffic-percentage-for-service-{{.MicroserviceVersion1}}{{"}}"}}
     - destination:
         host: service-{{.MicroserviceName}}
         subset: {{.MicroserviceName}}-{{.MicroserviceVersion2 | replace "." "-"}}
         port:
           number: {{.ServicePort2}}
-      weight: {{traffic-percentage-for-service-{{.MicroserviceVersion2}}}}
+      weight: {{"{{"}}traffic-percentage-for-service-{{.MicroserviceVersion2}}{{"}}"}}
