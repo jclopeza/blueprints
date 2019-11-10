@@ -62,4 +62,6 @@ files:
 - path: xebialabs/gateway.yaml.tmpl
 - path: xebialabs/virtual-service-transition.yaml.tmpl
   dependsOnTrue: !expression GenerateTransition == 'Yes'
+- path: xebialabs/deployment-transition.yaml.tmpl
+  dependsOnTrue: !expression GenerateTransition == 'Yes'
 - path: xebialabs.yaml.tmpl

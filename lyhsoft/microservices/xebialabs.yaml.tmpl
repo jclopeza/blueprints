@@ -8,4 +8,5 @@ metadata:
    - xebialabs/virtual-service.yaml
    - xebialabs/gateway.yaml
 {{if eq .GenerateTransition "Yes"}}   - xebialabs/virtual-service-transition.yaml
+   - xebialabs/deployment-transition.yaml
 {{- end}}
