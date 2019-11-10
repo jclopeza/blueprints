@@ -42,6 +42,6 @@ parameters:
 files:
 - path: xebialabs/deployment.yaml.tmpl
 - path: xebialabs/service.yaml.tmpl
-- path: resourcesFiles/destination-rules.yaml.tmpl
+- path: xebialabs/resourcesFiles/destination-rules.yaml.tmpl
 - path: xebialabs/destination-rules.yaml.tmpl
 - path: xebialabs.yaml.tmpl
