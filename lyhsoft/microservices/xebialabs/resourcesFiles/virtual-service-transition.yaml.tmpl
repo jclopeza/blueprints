@@ -1,0 +1,26 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: virtual-service-{{.MicroserviceName}}
+spec:
+  hosts:
+  - {{.MicroserviceName}}.com
+  gateways:
+  - gateway-istio
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: service-{{.MicroserviceName}}
+        subset: {{.MicroserviceName}}-{{.MicroserviceVersionToReplace | replace "." "-"}}
+        port:
+          number: {{.ServicePort}}
+      weight: {{"{{"}}traffic-percentage-for-service-{{.MicroserviceVersionToReplace}}{{"}}"}}
+    - destination:
+        host: service-{{.MicroserviceName}}
+        subset: {{.MicroserviceName}}-{{.MicroserviceVersion | replace "." "-"}}
+        port:
+          number: {{.ServicePort}}
+      weight: {{"{{"}}traffic-percentage-for-service-{{.MicroserviceVersion}}{{"}}"}}

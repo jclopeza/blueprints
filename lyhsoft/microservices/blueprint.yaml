@@ -3,14 +3,14 @@ kind: Blueprint
 metadata:
   projectName: Microservicios
   description: |
-    Este blueprint crea varias aplicaciones con distintos componentes K8S.
-    Crea tambien los distintos recursos para que puedan ser gestionados por Istio.
+    This blueprint creates several aplications with diferent resources for K8S.
+    It also creates several resources so it can be managed by Istio.
   author: JC
   version: 1.0
 parameters:
 # Applications
 - name: ApplicationName
-  description: Nombre de la aplicación al que pertenece el microservicio
+  description: Name of the application to which the microservice belongs
   type: Select
   options:
     - voting-app
@@ -18,7 +18,7 @@ parameters:
     - calculator
     - petclinic
 - name: MicroserviceName
-  description: Nombre del microservicio
+  description: Name of the microservice
   type: Select
   options:
     - vote
@@ -27,24 +27,39 @@ parameters:
     - db
     - worker
 - name: MicroserviceVersion
-  description: Versión del microservicio
+  description: Version of the microservice
   type: Input
-  default: 32.0.0-B40
+  default: 32.0.0-B41
 - name: ContainerPort
-  description: Puerto expuesto por el contenedor
+  description: Port exposed by the container
   type: Input
   default: 80
 - name: ServicePort
-  description: Puerto expuesto por el servicio
+  description: Port exposed by the service
   type: Input
   default: 5000
+- name: GenerateTransition
+  description: Are you updating an existing version of this microservice?
+  type: Select
+  options:
+    - "Yes"
+    - "No"
+- name: MicroserviceVersionToReplace
+  description: Version of the microservice to replace
+  type: Input
+  default: 32.0.0-B40
+  dependsOnTrue: !expression GenerateTransition == 'Yes'
 
 files:
 - path: xebialabs/deployment.yaml.tmpl
 - path: xebialabs/service.yaml.tmpl
 - path: xebialabs/resourcesFiles/destination-rules.yaml.tmpl
 - path: xebialabs/resourcesFiles/virtual-service.yaml.tmpl
+- path: xebialabs/resourcesFiles/virtual-service-transition.yaml.tmpl
+  dependsOnTrue: !expression GenerateTransition == 'Yes'
 - path: xebialabs/resourcesFiles/gateway-istio.yaml.tmpl
 - path: xebialabs/virtual-service.yaml.tmpl
 - path: xebialabs/gateway.yaml.tmpl
+- path: xebialabs/virtual-service-transition.yaml.tmpl
+  dependsOnTrue: !expression GenerateTransition == 'Yes'
 - path: xebialabs.yaml.tmpl
