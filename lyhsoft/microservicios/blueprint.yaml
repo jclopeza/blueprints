@@ -44,6 +44,7 @@ files:
 - path: xebialabs/service.yaml.tmpl
 - path: xebialabs/resourcesFiles/destination-rules.yaml.tmpl
 - path: xebialabs/resourcesFiles/virtual-service.yaml.tmpl
+- path: xebialabs/resourcesFiles/gateway-istio.yaml.tmpl
 - path: xebialabs/virtual-service.yaml.tmpl
 - path: xebialabs/gateway.yaml.tmpl
 - path: xebialabs.yaml.tmpl
