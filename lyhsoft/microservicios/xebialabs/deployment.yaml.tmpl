@@ -27,7 +27,7 @@ spec:
     labels:
       run: {{.MicroserviceName}}
       version: {{.MicroserviceVersion}}
-    deploymentName: deployment-{{.MicroserviceName}}-{{.MicroserviceVersion | ToLower}}
+    deploymentName: deployment-{{.MicroserviceName}}-{{.MicroserviceVersion | lower}}
     replicasCount: "1"
     matchLabels:
       run: {{.MicroserviceName}}
