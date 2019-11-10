@@ -7,5 +7,5 @@ metadata:
    - xebialabs/service.yaml
    - xebialabs/virtual-service.yaml
    - xebialabs/gateway.yaml
-{{if eq .GenerateInfrastructure "Sí"}}   - xebialabs/virtual-service-transition.yaml
+{{if eq .GenerateTransition "Yes"}}   - xebialabs/virtual-service-transition.yaml
 {{- end}}
