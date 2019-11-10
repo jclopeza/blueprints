@@ -41,7 +41,7 @@ parameters:
 
 files:
 - path: xebialabs/deployment.yaml.tmpl
-# - path: xebialabs/infrastructure.yaml.tmpl
+- path: xebialabs/service.yaml.tmpl
 #   dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
 # - path: xebialabs/environments.yaml.tmpl
 #   dependsOnTrue: !expression GenerateInfrastructure == 'Sí'
