@@ -43,4 +43,6 @@ files:
 - path: xebialabs/deployment.yaml.tmpl
 - path: xebialabs/service.yaml.tmpl
 - path: xebialabs/resourcesFiles/destination-rules.yaml.tmpl
+- path: xebialabs/resourcesFiles/virtual-service.yaml.tmpl
+- path: xebialabs/virtual-service.yaml.tmpl
 - path: xebialabs.yaml.tmpl
