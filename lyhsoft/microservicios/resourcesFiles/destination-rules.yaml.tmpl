@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
 metadata:
-  name: destination-rule-{{.MicroserviceName}}-{{.MicroserviceVersion}}
+  name: destination-rule-{{.MicroserviceName}}-{{.MicroserviceVersion | replace "." "-" | lower}}
 spec:
   host: service-{{.MicroserviceName}}
   subsets:
