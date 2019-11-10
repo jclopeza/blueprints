@@ -17,3 +17,7 @@ spec:
     propagationPolicy: Foreground
     updateMethod: apply
     file: !file "resourcesFiles/virtual-service.yaml"
+  applicationDependencies:
+    gateway: "1.0.0-B1"
+  dependencyResolution: EXISTING
+  undeployDependencies: "true"

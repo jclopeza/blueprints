@@ -1,0 +1,19 @@
+---
+apiVersion: xl-deploy/v1
+kind: Applications
+spec:
+- name: Applications/Applications
+  type: core.Directory
+- name: Applications/Applications/application-istio-k8s
+  type: core.Directory
+- name: Applications/Applications/application-istio-k8s/gateway
+  type: udm.Application
+- name: Applications/Applications/application-istio-k8s/gateway/1.0.0-B1
+  type: udm.DeploymentPackage
+  deployables:
+  - name: gateway-istio
+    type: k8s.ResourcesFile
+    mergePatchType: strategic
+    propagationPolicy: Foreground
+    updateMethod: apply
+    file: !file "resourcesFiles/gateway-istio.yaml"
