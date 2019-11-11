@@ -1,0 +1,19 @@
+---
+apiVersion: xl-deploy/v1
+kind: Applications
+spec:
+- name: Applications/Applications
+  type: core.Directory
+- name: Applications/Applications/application-{{.ApplicationName}}-k8s
+  type: core.Directory
+- name: Applications/Applications/application-{{.ApplicationName}}-k8s/destination-rule-{{.MicroserviceName}}
+  type: udm.Application
+- name: Applications/Applications/application-{{.ApplicationName}}-k8s/destination-rule-{{.MicroserviceName}}/{{.MicroserviceVersion}}
+  type: udm.DeploymentPackage
+  deployables:
+  - name: destination-rule-{{.MicroserviceName}}-{{.MicroserviceVersion}}
+    type: k8s.ResourcesFile
+    mergePatchType: strategic
+    propagationPolicy: Foreground
+    updateMethod: apply
+    file: !file "resourcesFiles/destination-rules.yaml"
