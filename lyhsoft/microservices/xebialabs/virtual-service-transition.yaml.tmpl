@@ -17,3 +17,6 @@ spec:
     propagationPolicy: Foreground
     updateMethod: patch
     file: !file "resourcesFiles/virtual-service-transition.yaml"
+  applicationDependencies:
+    destination-rule-{{.MicroserviceName}}: "{{.MicroserviceVersionToReplace}}"
+    destination-rule-{{.MicroserviceName}}: "{{.MicroserviceVersion}}"
