@@ -13,7 +13,7 @@ spec:
   deployables:
   - name: virtual-service-{{.MicroserviceName}}-{{.MicroserviceVersionToReplace}}+{{.MicroserviceVersion}}
     type: k8s.ResourcesFile
-    mergePatchType: strategic
+    mergePatchType: merge
     propagationPolicy: Foreground
-    updateMethod: apply
+    updateMethod: patch
     file: !file "resourcesFiles/virtual-service-transition.yaml"
