@@ -1,8 +1,5 @@
 [
   "java/war",
   "lyhsoft/dependencies-management",
-  "lyhsoft/microservices",
-  "lyhsoft/virtual-service-compose",
-  "orange/microservice",
-  "orange/spa"
+  "lyhsoft/microservices"
 ]
