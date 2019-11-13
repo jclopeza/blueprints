@@ -39,7 +39,7 @@ spec:
       run: {{.MicroserviceName}}
       version: {{.MicroserviceVersion}}
   applicationDependencies:
-    service-vote: ""
+    service-{{.MicroserviceName}}: ""
     virtual-service-{{.MicroserviceName}}: "{{.MicroserviceVersion}}"
   dependencyResolution: EXISTING
   undeployDependencies: "true"
