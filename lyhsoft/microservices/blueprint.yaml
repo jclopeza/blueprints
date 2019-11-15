@@ -33,11 +33,11 @@ parameters:
 - name: MicroserviceVersion
   description: Version of the microservice
   type: Input
-  default: 5.0.0-B41
+  default: 5.0.0-B5
 - name: ContainerPort
   description: Port exposed by the container
   type: Input
-  default: 80
+  default: 1234
 - name: ServicePort
   description: Port exposed by the service
   type: Input
@@ -51,7 +51,7 @@ parameters:
 - name: MicroserviceVersionToReplace
   description: Version of the microservice to replace
   type: Input
-  default: 5.0.0-B40
+  default: 5.0.0-B4
   dependsOnTrue: !expression GenerateTransition == 'Yes'
 
 files:
