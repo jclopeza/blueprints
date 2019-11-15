@@ -14,6 +14,7 @@ parameters:
   type: Select
   options:
     - voting-app
+    - calculator-app
     - tutorial-app
     - moby-counter
     - calculator
@@ -23,6 +24,7 @@ parameters:
   type: Select
   options:
     - vote
+    - instructions
     - tutorial
     - result
     - redis
@@ -31,7 +33,7 @@ parameters:
 - name: MicroserviceVersion
   description: Version of the microservice
   type: Input
-  default: 32.0.0-B41
+  default: 5.0.0-B41
 - name: ContainerPort
   description: Port exposed by the container
   type: Input
@@ -49,7 +51,7 @@ parameters:
 - name: MicroserviceVersionToReplace
   description: Version of the microservice to replace
   type: Input
-  default: 32.0.0-B40
+  default: 5.0.0-B40
   dependsOnTrue: !expression GenerateTransition == 'Yes'
 
 files:
