@@ -19,8 +19,6 @@ spec:
     file: !file "resourcesFiles/destination-rules.yaml"
   - name: deployment-{{.MicroserviceName}}-{{.MicroserviceVersion}}
     type: k8s.DeploymentSpec
-    podCreateDeleteRetryCount: 20
-    restartPolicy: Always
     containers:
     - name: container
       type: k8s.ContainerSpec
@@ -30,14 +28,16 @@ spec:
       - name: port
         type: k8s.ContainerPortSpec
         containerPort: "{{.ContainerPort}}"
+    podCreateDeleteRetryCount: "20"
     labels:
       run: {{.MicroserviceName}}
-      version: {{.MicroserviceVersion}}
+      version: "{{.MicroserviceVersion}}"
+    restartPolicy: Always
     deploymentName: deployment-{{.MicroserviceName}}-{{.MicroserviceVersion | lower}}
     replicasCount: "1"
     matchLabels:
       run: {{.MicroserviceName}}
-      version: {{.MicroserviceVersion}}
+      version: "{{.MicroserviceVersion}}"
   applicationDependencies:
     service-{{.MicroserviceName}}: ""
     virtual-service-{{.MicroserviceName}}: "{{.MicroserviceVersion}}"
