@@ -29,7 +29,7 @@ spec:
       ports:
       - name: port
         type: k8s.ContainerPortSpec
-        containerPort: {{.ContainerPort}}
+        containerPort: "{{.ContainerPort}}"
     labels:
       run: {{.MicroserviceName}}
       version: {{.MicroserviceVersion}}

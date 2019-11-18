@@ -25,5 +25,5 @@ spec:
     - name: port
       type: k8s.ServicePortSpec
       portName: http
-      port: {{.ServicePort}}
-      targetPort: {{.ContainerPort}}
+      port: "{{.ServicePort}}"
+      targetPort: "{{.ContainerPort}}"
