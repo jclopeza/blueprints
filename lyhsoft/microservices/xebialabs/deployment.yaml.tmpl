@@ -33,7 +33,7 @@ spec:
       run: {{.MicroserviceName}}
       version: "{{.MicroserviceVersion}}"
     restartPolicy: Always
-    deploymentName: deployment-{{.MicroserviceName}}-{{.MicroserviceVersion | lower}}
+    deploymentName: deployment-{{.MicroserviceName}}-{{.MicroserviceVersion | replace "." "-" | lower}}
     replicasCount: "1"
     matchLabels:
       run: {{.MicroserviceName}}
