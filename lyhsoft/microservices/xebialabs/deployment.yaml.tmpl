@@ -43,3 +43,7 @@ spec:
     virtual-service-{{.MicroserviceName}}: "{{.MicroserviceVersion}}"
   dependencyResolution: EXISTING
   undeployDependencies: "true"
+  changeLog: !source "resourcesFiles/change-log.txt"
+  gitRepo: !value GIT_REPO
+  buildUrl: !value BUILD_URL
+  commitId: !value COMMIT_ID
