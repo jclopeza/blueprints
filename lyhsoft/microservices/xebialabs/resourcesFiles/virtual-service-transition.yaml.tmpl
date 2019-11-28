@@ -4,7 +4,7 @@ metadata:
   name: virtual-service-{{.MicroserviceName}}
 spec:
   hosts:
-  - {{.MicroserviceName}}-{{environment}}.com
+  - {{.MicroserviceName}}-{{"{{"}}environment{{"}}"}}.com
   gateways:
   - gateway-istio
   http:
