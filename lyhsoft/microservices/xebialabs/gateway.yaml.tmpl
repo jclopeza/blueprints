@@ -10,6 +10,8 @@ spec:
   type: udm.Application
 - name: Applications/Applications/application-istio-k8s/gateway/1.0.0-B1
   type: udm.DeploymentPackage
+  satisfiesOkTestManager: True
+  satisfiesOkReleaseManager: True
   deployables:
   - name: gateway-istio
     type: k8s.ResourcesFile
