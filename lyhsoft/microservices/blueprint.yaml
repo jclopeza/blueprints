@@ -33,15 +33,15 @@ parameters:
 - name: MicroserviceVersion
   description: Version of the microservice
   type: Input
-  default: 5.0.0-B5
+  default: 33.0.0-B50
 - name: ContainerPort
   description: Port exposed by the container
   type: Input
-  default: 1234
+  default: 80
 - name: ServicePort
   description: Port exposed by the service
   type: Input
-  default: 5000
+  default: 80
 - name: GenerateTransition
   description: Are you updating an existing version of this microservice?
   type: Select
@@ -51,7 +51,7 @@ parameters:
 - name: MicroserviceVersionToReplace
   description: Version of the microservice to replace
   type: Input
-  default: 5.0.0-B4
+  default: 32.0.0-B49
   dependsOnTrue: !expression GenerateTransition == 'Yes'
 
 files:
