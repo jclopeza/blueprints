@@ -1,4 +1,6 @@
 [
+  "giss/kubernetes-project",
+  "giss/openshift-project",
   "lyhsoft/dependencies-management",
   "lyhsoft/microservices"
 ]

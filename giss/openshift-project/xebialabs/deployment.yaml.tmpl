@@ -1,0 +1,65 @@
+################################################################################
+# This is a parametrized template. It must be used as follow:
+# xl apply -f app.yaml --values version=3.0.0
+################################################################################
+---
+apiVersion: xl-deploy/v1
+kind: Applications
+spec:
+- name: Applications/{{.ApplicationName}}
+  type: udm.Application
+- name: !format Applications/{{.ApplicationName}}/%version%
+  type: udm.DeploymentPackage
+  deployables:
+  - name: '{{.ApplicationName}}-secret'
+    type: k8s.SecretSpec
+    data:
+      password: "password"
+  - name: '{{.ApplicationName}}-dc'
+    type: openshift.DeploymentConfigSpec
+    deploymentConfigName: '{{.ApplicationName}}-dc'
+    replicas: "1"
+    selector:
+      app: '{{.ApplicationName}}'
+    template:
+    - name: '{{.ApplicationName}}-pod'
+      type: k8s.PodSpec
+      containers:
+      - name: '{{.ApplicationName}}-container'
+        type: k8s.ContainerSpec
+        containerName: '{{.ApplicationName}}-container'
+        image: !format 'lyhsoft/{{.ApplicationName}}:%version%'
+        ports:
+        - name: '{{.ApplicationName}}-port'
+          type: k8s.ContainerPortSpec
+          containerPort: "{{.ContainerPort}}"
+          protocol: TCP
+      podName: '{{.ApplicationName}}-pod'
+      labels:
+        app: '{{.ApplicationName}}'
+    triggers:
+    - name: '{{.ApplicationName}}-trigger-strategy'
+      type: openshift.DeploymentTriggerPolicySpec
+      type_of_trigger: ConfigChange
+      automatic: "true"
+  - name: '{{.ApplicationName}}-svc'
+    type: k8s.ServiceSpec
+    serviceName: '{{.ApplicationName}}-svc'
+    serviceType: NodePort
+    selectors:
+      app: '{{.ApplicationName}}'
+    ports:
+    - name: '{{.ApplicationName}}-port-http'
+      type: k8s.ServicePortSpec
+      portName: '{{.ApplicationName}}-port-http'
+      port: "{{.ServicePort}}"
+      targetPort: "{{.ContainerPort}}"
+  - name: !format '{{.ApplicationName}}-configmap'
+    type: k8s.ConfigMapSpec
+    data:
+      user: "user"
+      jdbc: "jdbc"
+  - name: !format '{{.ApplicationName}}-route'
+    type: openshift.RouteSpec
+    routeName: '{{.ApplicationName}}-route'
+    serviceName: '{{.ApplicationName}}-svc'

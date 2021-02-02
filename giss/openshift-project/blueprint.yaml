@@ -1,0 +1,54 @@
+apiVersion: xl/v1
+kind: Blueprint
+metadata:
+  projectName: Openshift Projects
+  description: |
+    Creacion de proyectos Openshift para GISS
+  author: JC
+  version: 1.0
+parameters:
+- name: ApplicationName
+  description: ¿Nombre de la aplicacion?
+  type: Input
+- name: UseVolumes
+  description: ¿Usa volumenes?
+  type: Select
+  options:
+    - "Si"
+    - "No"
+- name: ContainerPort
+  description: ¿Que puerto expone el contenedor??
+  type: Input
+  default: 8080
+- name: ServicePort
+  description: ¿Que puerto expone el servicio??
+  type: Input
+  default: 30000
+- name: CreateRoute
+  description: ¿Debe exponerse el servicio al exterior?
+  type: Select
+  options:
+    - "Si"
+    - "No"
+- name: CreateBuildConfig
+  description: ¿Quiere crear un Build Config para esta aplicacion?
+  type: Select
+  options:
+    - "Si"
+    - "No"
+- name: ReplicasVariables
+  description: ¿Varia el numero de replicas entre entornos?
+  type: Select
+  options:
+    - "Si"
+    - "No"
+- name: DeploymentStrategyReplicasVariables
+  description: ¿Que estrategia de despliegue desea en el Deployment Config?
+  type: Select
+  options:
+    - "Rolling"
+    - "Recreate"
+    - "Custom"
+files:
+- path: xebialabs/deployment.yaml.tmpl
+- path: xebialabs.yaml.tmpl
