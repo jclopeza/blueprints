@@ -50,5 +50,4 @@ parameters:
     - "Recreate"
     - "Custom"
 files:
-- path: xebialabs/deployment.yaml.tmpl
-- path: xebialabs.yaml.tmpl
+- path: deployment.yaml.tmpl
